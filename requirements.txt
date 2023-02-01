@@ -1,1 +1,1 @@
-../dagster
+../dagster/python_modules/dagster
