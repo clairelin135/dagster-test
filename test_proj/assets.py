@@ -19,7 +19,7 @@ from dagster._core.definitions.multi_dimensional_partitions import (
 )
 
 time_window_partitions = DailyPartitionsDefinition(start_date="2015-05-05")
-static_partitions = StaticPartitionsDefinition(["a", "b", "c", "d", "e", "f", "g", "x"])
+static_partitions = StaticPartitionsDefinition(["a", "b", "c", "d", "e", "f", "g", "x", "z"])
 composite = MultiPartitionsDefinition(
     {
         "abc": static_partitions,
