@@ -31,7 +31,7 @@ composite = MultiPartitionsDefinition(
 
 @asset
 def unpartitioned_asset():
-    return 1
+    return 2
 
 
 @asset(partitions_def=composite)
