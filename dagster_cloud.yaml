@@ -1,0 +1,4 @@
+locations:
+  - location_name: example_location
+    code_source:
+      python_file: test_proj/__init__.py
