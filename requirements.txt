@@ -1,0 +1,2 @@
+-e "git+https://github.com/dagster-io/dagster@release-1.1.15#egg=dagster&subdirectory=python_modules/dagster"
+.
