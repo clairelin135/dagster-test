@@ -72,9 +72,3 @@ def static_asset():
 )
 def asset3():
     return 1
-
-
-@asset(partitions_def=DailyPartitionsDefinition(start_date="2000-01-01"))
-def shalabh_daily_partitioned_asset(context) -> None:
-    partition_date_str = context.asset_partition_key_for_output()
-    return partition_date_str
