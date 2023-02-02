@@ -26,6 +26,14 @@ jobs:
         with:
           dagster_cloud_file: dagster_cloud.yaml
 
+      - name: Checkout dagster version to test
+        if: env.ENABLE_FAST_DEPLOYS == 'true'
+        uses: actions/checkout@v3
+        with:
+          repository: dagster-io/dagster
+          ref: release-1.1.15
+          path: dagster
+
       - name: Checkout
         if: env.ENABLE_FAST_DEPLOYS == 'true'
         uses: actions/checkout@v3
