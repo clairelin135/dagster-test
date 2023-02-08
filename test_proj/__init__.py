@@ -13,7 +13,12 @@ from dagster import (
     DagsterRunStatus,
     sensor,
     SkipReason,
+    DynamicPartitionsDefinition,
+    op,
+    job,
+    build_asset_reconciliation_sensor,
 )
+import random
 from dagster._core.definitions.multi_dimensional_partitions import (
     MultiPartitionsDefinition,
     MultiPartitionKey,
@@ -35,26 +40,14 @@ def unpartitioned_asset():
 
 
 @asset(partitions_def=composite)
-def asset1(context):
+def multipartitioned_asset(context):
     context.log.info(context.partition_key)
     context.log.info(context.run.tags)
     return 1
 
 
-@asset(partitions_def=composite)
-def asset2(asset1):
-    return 2
-
-
-@asset(
-    partitions_def=MultiPartitionsDefinition(
-        {
-            "yyyyyyy": static_partitions,
-            "foo": static_partitions,
-        }
-    )
-)
-def aosdaoid(context):
+@asset(partitions_def=StaticPartitionsDefinition(["a", "b", "c", "d"]))
+def static_partitioned_asset():
     return 1
 
 
@@ -63,25 +56,61 @@ def daily_asset():
     return 1
 
 
-@asset(partitions_def=StaticPartitionsDefinition(["a", "b", "c", "d"]))
-def static_asset():
+foo_partitions_def = DynamicPartitionsDefinition(name="foo")
+
+
+@asset(partitions_def=foo_partitions_def)
+def foo_dynamic_asset():
     return 1
 
 
-@asset(
-    partitions_def=MultiPartitionsDefinition(
-        {
-            "yyyyyyy": static_partitions,
-            "foo": static_partitions,
-        }
-    )
+@asset(partitions_def=foo_partitions_def)
+def foo_downstream_asset(foo_dynamic_asset):
+    return 1
+
+
+@asset
+def unpartitioned_downstream_of_foo(foo_dynamic_asset):
+    return 1
+
+
+@op
+def op1(context):
+    foo_partitions_def.add_partitions(["1", "2", "3", "4"], context.instance)
+
+
+@job
+def create_foo_dynamic_partitions_job():
+    op1()
+
+
+quux = DynamicPartitionsDefinition(name="quux")
+
+
+@asset(partitions_def=quux)
+def quux_dynamic_asset(context):
+    return 1
+
+
+quux_asset_job = define_asset_job("quux_asset_job", [quux_dynamic_asset], partitions_def=quux)
+
+
+@sensor(job=quux_asset_job)
+def add_quux_partitions_sensor(context):
+    pk = str(random.randint(0, 5))
+    quux.add_partitions([pk], context.instance)
+    return quux_asset_job.run_request_for_partition(pk, instance=context.instance)
+
+
+defs = Definitions(
+    assets=load_assets_from_current_module(),
+    jobs=[create_foo_dynamic_partitions_job, quux_asset_job],
+    sensors=[
+        add_quux_partitions_sensor,
+        build_asset_reconciliation_sensor(
+            AssetSelection.keys(
+                "foo_dynamic_asset", "foo_downstream_asset", "unpartitioned_downstream_of_foo"
+            )
+        ),
+    ],
 )
-def asset3():
-    return 1
-
-@asset(partitions_def=DailyPartitionsDefinition(start_date="2000-01-01"))
-def shalabh_daily_partitioned_asset(context) -> None:
-    partition_date_str = context.asset_partition_key_for_output()
-    return partition_date_str
-
-defs = Definitions(assets=load_assets_from_current_module())
