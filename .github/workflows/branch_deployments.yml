@@ -9,7 +9,7 @@ concurrency:
 env:
   DAGSTER_CLOUD_URL: "https://claire-test.canary.dagster.cloud"
   DAGSTER_CLOUD_API_TOKEN: ${{ secrets.DAGSTER_CLOUD_API_TOKEN }}
-  ENABLE_FAST_DEPLOYS: 'true'
+  ENABLE_FAST_DEPLOYS: "true"
 
 jobs:
   dagster_cloud_default_deploy:
@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-20.04
     outputs:
       build_info: ${{ steps.parse-workspace.outputs.build_info }}
-    
+
     steps:
       - name: Parse cloud workspace
         if: env.ENABLE_FAST_DEPLOYS != 'true'
@@ -31,7 +31,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: dagster-io/dagster
-          ref: release-1.1.15
+          ref: release-1.1.18
           path: dagster
 
       - name: Checkout
@@ -40,7 +40,7 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           path: project-repo
-          
+
       - name: Build and deploy Python executable
         if: env.ENABLE_FAST_DEPLOYS == 'true'
         uses: dagster-io/dagster-cloud-action/actions/build_deploy_python_executable@pex-v0.1
@@ -75,4 +75,3 @@ jobs:
           organization_id: ${{ secrets.ORGANIZATION_ID }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
